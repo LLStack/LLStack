@@ -1,0 +1,17 @@
+#
+# This repo is managed by "percona-release" utility, do not edit!
+#
+[ps-80-release-x86_64]
+name = Percona Server 8.0 release/x86_64 YUM repository
+baseurl = http://repo.percona.com/ps-80/yum/release/8/RPMS/x86_64
+enabled = 1
+gpgcheck = 1
+gpgkey = file:///etc/pki/rpm-gpg/PERCONA-PACKAGING-KEY
+
+[ps-80-release-sources]
+name = Percona Server 8.0 release/sources YUM repository
+baseurl = http://repo.percona.com/ps-80/yum/release/8/SRPMS
+enabled = 0
+gpgcheck = 1
+gpgkey = file:///etc/pki/rpm-gpg/PERCONA-PACKAGING-KEY
+
