@@ -481,11 +481,12 @@ doInstall(){
     echo 'Copy LSWS config'
     cp -a /tmp/LLStack-${envType}/conf/httpd_config.xml /usr/local/lsws/conf/httpd_config.xml
     cp -a /tmp/LLStack-${envType}/conf/httpd_config.conf /usr/local/lsws/conf/httpd_config.conf
-    cp -a /tmp/LLStack-${envType}/conf/llstack.conf /usr/local/lsws/conf/templates/llstack.xml
+    cp -a /tmp/LLStack-${envType}/conf/llstack.xml /usr/local/lsws/conf/templates/llstack.xml
     chown -R lsadm:nobody /usr/local/lsws/conf/
 
     echo 'Mkdir localhost'
     mkdir -p /var/www/vhosts/localhost/{html,logs,certs}
+    mkdir -p /var/www/lscache/
     chown nobody:nobody /var/www/vhosts/localhost/ -R
     cp -a /tmp/LLStack-${envType}/home/demo/public_html/* /var/www/vhosts/localhost/html/
 
