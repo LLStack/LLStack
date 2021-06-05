@@ -154,7 +154,7 @@ install_owasp(){
         mv ./coreruleset-${crs_version} ./owasp-modsecurity-crs 
         rm -rf coreruleset-${crs_version}.zip
     else
-        curl -L --retry 3 -o "coreruleset-${crs_version}.zip" "https://llstack-coreruleset.llstack.com/coreruleset-${crs_version}.zip"
+        curl -L --retry 3 -o "coreruleset-${crs_version}.zip" "https://coreruleset.files.llstack.com/coreruleset-${crs_version}.zip"
         unzip coreruleset-${crs_version}.zip
         mv ./coreruleset-${crs_version} ./owasp-modsecurity-crs 
         rm -rf coreruleset-${crs_version}.zip

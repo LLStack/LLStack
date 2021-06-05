@@ -6,7 +6,7 @@
 # Home: https://www.llstack.com
 # Blog: https://www.mf8.biz
 #
-# * OpenLiteSpeed Web Server
+# * LiteSpeed Enterprise Web Server
 # * Percona 5.7 8.0 (MariaDB 10.3/10.4/10.5)
 # * PHP 5.6/7.0/7.1/7.2/7.3/7.4/8.0
 # * phpMyAdmin/Adminer/AMysql
@@ -28,8 +28,8 @@ help_message(){
     echo "${EPACE}${EPACE}Will install the lsphp version in LLStack, eg: -p 2 or --php 3.  1=php56,2=php70,3=php71,4=php72,5=php73,6=php74,7=php80"
     echow '-m, --mysql, --MYSQL [MySQL_Version]'
     echo "${EPACE}${EPACE}will install the PerconaDB or MariaDB in LLStack,eg: -m 3 or --mysql 5. 1=MariaDB-10.3,2=MariaDB-10.4,3=MariaDB-10.5,4=MariaDB-10.6,5=Percona-5.7,6=Percona-8.0" 
-    echow '-l, --ols, --openlitespeed [OpenLiteSpeed_Option]'
-    echo "${EPACE}${EPACE}Will install the OpenLiteSpeed in LLStack, eg: -l 1 or --ols 2.  1=OpenLiteSpeed Stable,2=OpenLiteSpeed Edge"
+    echow '-l, --ols, --litespeed [LiteSpeed_Option]'
+    echo "${EPACE}${EPACE}Will install the LiteSpeed Enterprise in LLStack, eg: -l 1 or --ols 2.  1=LiteSpeed Stable,2=LiteSpeed Mainline"
     echow '-d, --dbtool, --DBTOOL [DBTool_Option]'
     echo "${EPACE}${EPACE}Will install the DBTool in LLStack, eg: -d 1 or --dbtool 2.  1=AMySQL,2=Adminer.3=phpMyAdmin"
     echow '-cC, --china, --CN [DBTool_Option]'
@@ -418,7 +418,7 @@ doInstall(){
 
   if [ "${LiteSpeedV}" != '0' ]; then
     cd /tmp
-    echo 'Download OpenLiteSpeed RPM Package'
+    echo 'Download LiteSpeed RPM Package'
     if [ "${LiteSpeedV}" = '1' ]; then
       LSWSENTVersionD=${LSWSENTVersionStable}
     elif [ "${LiteSpeedV}" = '2' ];then
@@ -611,12 +611,12 @@ doInstall(){
 #    echo "llstackadmin:$ENCRYPT_PASS" > /usr/local/lsws/admin/conf/htpasswd 
     touch /root/defaulthtpasswd
     echo "llstackadmin:$LSPASSRAND" > /root/defaulthtpasswd
-#    /usr/local/lsws/bin/lswsctrl restart >/dev/null
+    /usr/local/lsws/bin/lswsctrl restart >/dev/null
 #  fi
 
   #wget -P /root/ https://raw.githubusercontent.com/ivmm/LLStack/master/vhost.sh
 
-  if [[ -f "/usr/sbin/mysqld" || -f "/usr/share/lsphp-default-version" || -f "/usr/local/lsws/bin/openlitespeed" ]]; then
+  if [[ -f "/usr/sbin/mysqld" || -f "/usr/share/lsphp-default-version" || -f "/usr/local/lsws/bin/litespeed" ]]; then
     echo "================================================================"
     echo -e "\\033[42m [LLStack] Install completed. \\033[0m"
 
@@ -741,7 +741,7 @@ clear
         -[pP] | -php | --lsphp) shift
             phpV="${1}"
             ;;
-        -[lL] | -ols | --openlitespeed) shift
+        -[lL] | -ols | --litespeed) shift
             LiteSpeedV="${1}"
             ;;
         -[dD] | -dbtool | --DBTOOL) shift

@@ -72,13 +72,13 @@ www_domain(){
 }
 
 add_ls_domain(){
-    fst_match_line 'docker.xml</templateFile>' ${LS_HTTPD_CONF}
+    fst_match_line 'llstack.xml</templateFile>' ${LS_HTTPD_CONF}
     NEWNUM=$((FIRST_LINE_NUM+2))
     sed -i "${NEWNUM}i \ \ \ \ \ \ <member>\n \ \ \ \ \ \ \ <vhName>${DOMAIN}</vhName>\n \ \ \ \ \ \ \ <vhDomain>${DOMAIN},${WWW_DOMAIN}</vhDomain>\n \ \ \ \ \ \ </member>" ${LS_HTTPD_CONF}
 }
 
 add_ols_domain(){
-    perl -0777 -p -i -e 's/(vhTemplate docker \{[^}]+)\}*(^.*listeners.*$)/\1$2
+    perl -0777 -p -i -e 's/(vhTemplate llstack \{[^}]+)\}*(^.*listeners.*$)/\1$2
   member '${DOMAIN}' {
     vhDomain              '${DOMAIN},${WWW_DOMAIN}'
   }/gmi' ${OLS_HTTPD_CONF}

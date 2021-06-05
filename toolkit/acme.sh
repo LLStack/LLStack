@@ -5,7 +5,6 @@ DOMAIN=''
 INSTALL=''
 UNINSTALL=''
 TYPE=0
-CONT_NAME='litespeed'
 ACME_SRC='https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh'
 EPACE='        '
 
