@@ -164,8 +164,8 @@
       <address>*:443</address>
       <reusePort>1</reusePort>
       <secure>1</secure>
-      <keyFile>/usr/local/lsws/admin/conf/webadmin.key</keyFile>
-      <certFile>/usr/local/lsws/admin/conf/webadmin.crt</certFile>
+      <keyFile>/usr/local/lsws/conf/example.key</keyFile>
+      <certFile>/usr/local/lsws/conf/example.crt</certFile>
     </listener>
   </listenerList>
   <vhTemplateList>

@@ -37,13 +37,13 @@ lsws_restart(){
 }
 
 apply_serial(){
-    serialctl.sh --serial ${1}
+    ./serialctl.sh --serial ${1}
     lsws_restart
 }
 
 mod_secure(){
     if [ "${1}" = 'enable' ] || [ "${1}" = 'Enable' ]; then
-        owaspctl.sh --enable
+        ./owaspctl.sh --enable
         lsws_restart
     elif [ "${1}" = 'disable' ] || [ "${1}" = 'Disable' ]; then
         ./owaspctl.sh --disable

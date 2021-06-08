@@ -34,6 +34,10 @@ help_message(){
     echo "${EPACE}${EPACE}Will install the DBTool in LLStack, eg: -d 1 or --dbtool 2.  1=AMySQL,2=Adminer.3=phpMyAdmin"
     echow '-cC, --china, --CN [DBTool_Option]'
     echo "${EPACE}${EPACE}Help Accelerate Chinese Network, eg: -c 1 or --CN 2.  1=Default Network,2=Chinese NetWork Acclerate"
+    echow '-kK, --Key, --Key [Activation_Option]'
+    echo "${EPACE}${EPACE}Please select the mode to activate LiteSpeed, eg: -c 1 or --Key 2.  1=Use Triay Key,2=Use License Key and you should use -N"
+    echow '-nN, --Number, --NUM [LicenseKey——Option]'
+    echo "${EPACE}${EPACE}Enter the serial number to activate LSWS, eg: -n Nlcz-ACFg- AbCd-Efgh"
     echow '-H, --help'
     echo "${EPACE}${EPACE}Display help and exit."       
     exit 0
@@ -65,6 +69,7 @@ phpV='0'
 LiteSpeedV='0'
 dbV='0'
 freeV='1'
+acV='1'
 ADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16 ; echo '')
 
 LSWSENTVersionStable='5.0/lsws-5.4.12'
@@ -92,7 +97,7 @@ runInstall(){
   showNotice '(Step 1/7) Update YUM packages'
 
   while true; do
-    read -p "Please answer yes or no. [Y/n]" yn
+    read -p "Please answer yes or no. [Y/n]" -i y yn
     case $yn in
       [Yy]* ) isUpdate='1'; break;;
       [Nn]* ) isUpdate='0'; break;;
@@ -185,12 +190,12 @@ runInstall(){
 
 doInstall(){
 
-  echo 'Detecting Dependencies'
+  showNotice 'Detecting Dependencies'
   [ "${isUpdate}" = '1' ] && yum update -y
   [ ! -x "/usr/bin/wget" ] && yum install wget -y
   [ ! -x "/usr/bin/curl" ] && yum install curl -y
   [ ! -x "/usr/bin/unzip" ] && yum install unzip -y
-  echo 'Disable SELINUX'
+  showNotice 'Disable SELINUX'
   [ -s /etc/selinux/config ] && sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
   setenforce 0 >/dev/null 2>&1
 
@@ -217,7 +222,7 @@ doInstall(){
     phpMyAdminURL=${phpMyAdmin_CN}
     touch /root/llstack-china-speed-tag.txt
   fi
-  echo 'Check LLStack-envtype.zip'
+  showNotice 'Check LLStack-envtype.zip'
   if [ ! -d "/tmp/LLStack-${envType}" ]; then
     cd /tmp || exit
     if [ ! -f "LLStack-${envType}.zip" ]; then
@@ -232,7 +237,7 @@ doInstall(){
       mv /tmp/LLStack /tmp/LLStack-${envType}
     fi
   fi
-  echo 'Install EPEL & Firewalld'
+  showNotice 'Install EPEL & Firewalld'
 
   if [ -f "/etc/alinux-release" ]; then
     yum install -y yum-utils firewalld firewall-config
@@ -241,13 +246,13 @@ doInstall(){
   fi
 
   if [ "${mysqlV}" != '0' ]; then
-  echo 'Remove Native DB'
+  showNotice 'Remove Native DB'
   yum -y remove mariadb*
   
     if [[ "${mysqlV}" = "1" || "${mysqlV}" = "2" || "${mysqlV}" = "3" || "${mysqlV}" = "4" ]]; then
       mariadbV='10.5'
       installDB='mariadb'
-      echo 'Disable Native MariaDB'
+      showNotice 'Disable Native MariaDB'
       yum module disable mariadb -y
       case ${mysqlV} in
         1)
@@ -263,12 +268,12 @@ doInstall(){
         mariadbV='10.6'
         ;;
       esac
-      echo 'Enable MariaDB REPO'
+      showNotice 'Enable MariaDB REPO'
       rpm --import ${mariaDBRepoUrl}/RPM-GPG-KEY-MariaDB
       echo -e "[mariadb]\\nname = MariaDB\\nbaseurl = ${mariaDBRepoUrl}/${mariadbV}/centos/8/x86_64/\\ngpgkey=file:///etc/pki/rpm-gpg/MariaDB-Server-GPG-KEY\\ngpgcheck=1\\nenabled=1\\nmodule_hotfixes=1" > /etc/yum.repos.d/mariadb.repo
     #elif [[ "${mysqlV}" = "5" ]]; then
     elif [[ "${mysqlV}" = "5" || "${mysqlV}" = "6" ]]; then
-      echo 'Enable PerconaDB REPO'
+      showNotice 'Enable PerconaDB REPO'
       #rpm -Uvh ${mysqlRepoUrl}/yum/percona-release-latest.noarch.rpm
       #rpm --import /tmp/LLStack-${envType}/keys/RPM-GPG-KEY-Percona
       rpm --import /tmp/LLStack-${envType}/keys/PERCONA-PACKAGING-KEY
@@ -277,14 +282,14 @@ doInstall(){
       
       case ${mysqlV} in
         5)
-        echo 'Setup PerconaDB 5.7'
+        showNotice 'Setup PerconaDB 5.7'
         cp -a /tmp/LLStack-${envType}/repo/percona-ps-57-release.repo /etc/yum.repos.d/percona-ps-57-release.repo
         if [ "${freeV}" = "2" ]; then
           sed -i "s@${mysqlUrl}@${mysqlRepoUrl}@g" /etc/yum.repos.d/percona-ps-57-release.repo
         fi
         ;;
         6)
-        echo 'Setup PerconaDB 8.0'
+        showNotice 'Setup PerconaDB 8.0'
         cp -a /tmp/LLStack-${envType}/repo/percona-ps-80-release.repo /etc/yum.repos.d/percona-ps-80-release.repo
         if [ "${freeV}" = "2" ]; then
           sed -i "s@${mysqlUrl}@${mysqlRepoUrl}@g" /etc/yum.repos.d/percona-ps-80-release.repo
@@ -297,21 +302,21 @@ doInstall(){
 
     if [ "${mysqlV}" != '0' ]; then
     if [ "${installDB}" = "mariadb" ]; then
-      echo 'Install MariaDB'
+      showNotice 'Install MariaDB'
       yum install -y MariaDB-server MariaDB-client MariaDB-common
       mysql_install_db --user=mysql
     elif [ "${installDB}" = "mysqld" ]; then
-      echo 'Install PerconaDB'
+      showNotice 'Install PerconaDB'
       if [ "${mysqlV}" = "5" ]; then
         yum install -y Percona-Server-client-57 Percona-Server-server-57
       elif [ "${mysqlV}" = "6" ]; then
         yum install -y percona-server-client percona-server-server
       fi
-      echo 'Initialize Insecure'
+      showNotice 'Initialize Insecure'
         mysqld --initialize-insecure --user=mysql
 
       if [ "${mysqlV}" = "6" ]; then
-      echo 'Setting Mysql Native Password'
+      showNotice 'Setting Mysql Native Password'
       sed -i "s@# default-authentication-plugin=mysql_native_password@default-authentication-plugin=mysql_native_password@g" /etc/my.cnf
       fi
     fi
@@ -321,7 +326,7 @@ doInstall(){
     sedPhpRepo() {
       find /etc/yum.repos.d/ -maxdepth 1 -name "remi*.repo" -type f -print0 | xargs -0 sed -i "$1"
     }
-    echo 'Enable REMI REPO'
+    showNotice 'Enable REMI REPO'
     if [ -f "/etc/alinux-release" ]; then
       rpm -Uvh --nodeps ${phpRepoUrl}/enterprise/remi-release-8.rpm
     else
@@ -342,71 +347,49 @@ doInstall(){
       1)
       echo 'Install PHP56'
       yum install -y php56-php-litespeed php56-php-cli php56-php-bcmath php56-php-gd php56-php-mbstring php56-php-mcrypt php56-php-mysqlnd php56-php-opcache php56-php-pdo php56-php-pecl-crypto php56-php-pecl-geoip php56-php-pecl-zip php56-php-recode php56-php-snmp php56-php-soap php56-php-xml
-      mkdir -p /usr/local/lsws/lsphp56/bin/
-      ln -s /opt/remi/php56/root/usr/bin/lsphp /usr/local/lsws/lsphp56/bin/lsphp
-      ln -s /opt/remi/php56/root/usr/bin/php /usr/bin/php
-      touch /usr/share/lsphp-default-version
-      echo "lsphp56" > /usr/share/lsphp-default-version
+      phpInsVer = '56'
       ;;
       2)
       echo 'Install PHP70'
       yum install -y php70-php-litespeed php70-php-cli php70-php-bcmath php70-php-gd php70-php-json php70-php-mbstring php70-php-mcrypt php70-php-mysqlnd php70-php-opcache php70-php-pdo php70-php-pecl-crypto php70-php-pecl-geoip php70-php-pecl-zip php70-php-recode php70-php-snmp php70-php-soap php70-php-xml
-      mkdir -p /usr/local/lsws/lsphp70/bin/
-      ln -s /opt/remi/php70/root/usr/bin/lsphp /usr/local/lsws/lsphp70/bin/lsphp
-      ln -s /opt/remi/php70/root/usr/bin/php /usr/bin/php
-      touch /usr/share/lsphp-default-version
-      echo "lsphp70" > /usr/share/lsphp-default-version
+      phpInsVer = '70'
       ;;
       3)
       echo 'Install PHP71'
       yum install -y php71-php-litespeed php71-php-cli php71-php-bcmath php71-php-gd php71-php-json php71-php-mbstring php71-php-mcrypt php71-php-mysqlnd php71-php-opcache php71-php-pdo php71-php-pecl-crypto php71-php-pecl-geoip php71-php-pecl-zip php71-php-recode php71-php-snmp php71-php-soap php71-php-xml
-      mkdir -p /usr/local/lsws/lsphp71/bin/
-      ln -s /opt/remi/php71/root/usr/bin/lsphp /usr/local/lsws/lsphp71/bin/lsphp
-      ln -s /opt/remi/php71/root/usr/bin/php /usr/bin/php
-      touch /usr/share/lsphp-default-version
-      echo "lsphp71" > /usr/share/lsphp-default-version
+      phpInsVer = '71'
       ;;
       4)
       echo 'Install PHP72'
       yum install -y php72-php-litespeed php72-php-cli php72-php-bcmath php72-php-gd php72-php-json php72-php-mbstring php72-php-mcrypt php72-php-mysqlnd php72-php-opcache php72-php-pdo php72-php-pecl-crypto php72-php-pecl-mcrypt php72-php-pecl-geoip php72-php-pecl-zip php72-php-recode php72-php-snmp php72-php-soap php72-php-xml
-      mkdir -p /usr/local/lsws/lsphp72/bin/
-      ln -s /opt/remi/php72/root/usr/bin/lsphp /usr/local/lsws/lsphp72/bin/lsphp
-      ln -s /opt/remi/php72/root/usr/bin/php /usr/bin/php
-      touch /usr/share/lsphp-default-version
-      echo "lsphp72" > /usr/share/lsphp-default-version
+      phpInsVer = '72'
       ;;
       5)
       echo 'Install PHP73'
       yum install -y php73-php-litespeed php73-php-cli php73-php-bcmath php73-php-gd php73-php-json php73-php-mbstring php73-php-mcrypt php73-php-mysqlnd php73-php-opcache php73-php-pdo php73-php-pecl-crypto php73-php-pecl-mcrypt php73-php-pecl-geoip php73-php-pecl-zip php73-php-recode php73-php-snmp php73-php-soap php73-php-xml
-      mkdir -p /usr/local/lsws/lsphp73/bin/
-      ln -s /opt/remi/php73/root/usr/bin/lsphp /usr/local/lsws/lsphp73/bin/lsphp
-      ln -s /opt/remi/php73/root/usr/bin/php /usr/bin/php
-      touch /usr/share/lsphp-default-version
-      echo "lsphp73" > /usr/share/lsphp-default-version
+      phpInsVer = '73'
       ;;
       6)
       echo 'Install PHP74'
       yum install -y php74-php-litespeed php74-php-cli php74-php-bcmath php74-php-gd php74-php-json php74-php-mbstring php74-php-mcrypt php74-php-mysqlnd php74-php-opcache php74-php-pdo php74-php-pecl-crypto php74-php-pecl-mcrypt php74-php-pecl-geoip php74-php-pecl-zip php74-php-recode php74-php-snmp php74-php-soap php74-php-xml
-      mkdir -p /usr/local/lsws/lsphp74/bin/
-      ln -s /opt/remi/php74/root/usr/bin/lsphp /usr/local/lsws/lsphp74/bin/lsphp
-      ln -s /opt/remi/php74/root/usr/bin/php /usr/bin/php
-      touch /usr/share/lsphp-default-version
-      echo "lsphp74" > /usr/share/lsphp-default-version
+      phpInsVer = '74'
       ;;
       7)
       echo 'Install PHP80'
       yum install -y php80-php-litespeed php80-php-cli php80-php-bcmath php80-php-gd php80-php-json php80-php-mbstring php80-php-mcrypt php80-php-mysqlnd php80-php-opcache php80-php-pdo php80-php-pecl-crypto php80-php-pecl-mcrypt php80-php-pecl-geoip php80-php-pecl-zip php80-php-snmp php80-php-soap php80-php-xml
-      mkdir -p /usr/local/lsws/lsphp80/bin/
-      ln -s /opt/remi/php80/root/usr/bin/lsphp /usr/local/lsws/lsphp80/bin/lsphp
-      ln -s /opt/remi/php80/root/usr/bin/php /usr/bin/php
-      touch /usr/share/lsphp-default-version
-      echo "lsphp80" > /usr/share/lsphp-default-version
+      phpInsVer = '80'
       ;;
     esac
   fi
 
+      mkdir -p /usr/local/lsws/lsphp${phpInsVer}/bin/
+      ln -s /opt/remi/php${phpInsVer}/root/usr/bin/lsphp /usr/local/lsws/lsphp${phpInsVer}/bin/lsphp
+      ln -s /opt/remi/php${phpInsVer}/root/usr/bin/php /usr/bin/php
+      touch /usr/share/lsphp-default-version
+      echo 'lsphp${phpInsVer}' > /usr/share/lsphp-default-version
+
   #if [ "${LiteSpeedV}" != '0' ]; then
-  #echo 'Enable LiteSpeedTech REPO'
+  #showNotice 'Enable LiteSpeedTech REPO'
   #  rpm -Uvh ${LiteSpeedRepoUrl}/centos/litespeed-repo-1.2-1.el8.noarch.rpm
 
   #  LiteSpeedRepo=/etc/yum.repos.d/litespeed.repo
@@ -418,14 +401,14 @@ doInstall(){
 
   if [ "${LiteSpeedV}" != '0' ]; then
     cd /tmp
-    echo 'Download LiteSpeed RPM Package'
+    showNotice 'Download LiteSpeed RPM Package'
     if [ "${LiteSpeedV}" = '1' ]; then
       LSWSENTVersionD=${LSWSENTVersionStable}
     elif [ "${LiteSpeedV}" = '2' ];then
       LSWSENTVersionD=${LSWSENTVersionMainline}
     fi
     wget ${LiteSpeedRepoUrl}/packages/${LSWSENTVersionD}-ent-x86_64-linux.tar.gz
-    echo 'Install LSWS and libnsl'
+    showNotice 'Install LSWS and libnsl'
     tar xzf lsws-*-ent-x86_64-linux.tar.gz
     rm -f lsws-*-ent-x86_64-linux.tar.gz
     yum install libnsl -y
@@ -464,33 +447,40 @@ doInstall(){
 
     /bin/bash install.sh
 
-    echo 'Upgrade LSWS'
+    openssl ecparam  -genkey -name prime256v1 -out /usr/local/lsws/conf/example.key
+    openssl req -x509 -nodes -days 365 -new -key /usr/local/lsws/conf/example.key -out /usr/local/lsws/conf/example.crt -subj "/C=CN/ST=Shanghai/L=Shanghai/O=LLStack/OU=LLStack"
+
+    if [ "${LiteSpeedV}" = '2' ]; then
+
+    showNotice 'Upgrade LSWS'
 
     /bin/bash /usr/local/lsws/admin/misc/lsup.sh -f
     /usr/local/lsws//bin/lswsctrl start
     SERVERV=$(cat /usr/local/lsws/VERSION)
     echo "Version: lsws ${SERVERV}"
 
+    fi
+
     rm -rf /tmp/lsws-*
 
     #if [ -d "/usr/local/lsws/" ]; then
-    #  echo 'Mkdir vhosts config'
+    #  showNotice 'Mkdir vhosts config'
     #  mkdir -p /usr/local/lsws/conf/vhosts/
     #fi
 
-    echo 'Copy LSWS config'
+    showNotice 'Copy LSWS config'
     cp -a /tmp/LLStack-${envType}/conf/httpd_config.xml /usr/local/lsws/conf/httpd_config.xml
     cp -a /tmp/LLStack-${envType}/conf/httpd_config.conf /usr/local/lsws/conf/httpd_config.conf
     cp -a /tmp/LLStack-${envType}/conf/llstack.xml /usr/local/lsws/conf/templates/llstack.xml
     chown -R lsadm:nobody /usr/local/lsws/conf/
 
-    echo 'Mkdir localhost'
+    showNotice 'Mkdir localhost'
     mkdir -p /var/www/vhosts/localhost/{html,logs,certs}
     mkdir -p /var/www/lscache/
     chown nobody:nobody /var/www/vhosts/localhost/ -R
     cp -a /tmp/LLStack-${envType}/home/demo/public_html/* /var/www/vhosts/localhost/html/
 
-    echo 'Setting Default LSPHP Version'
+    showNotice 'Setting Default LSPHP Version'
     case ${phpV} in
       1)
       sed -i "s@lsphp73@lsphp56@g" /usr/local/lsws/conf/templates/llstack.xml
@@ -519,7 +509,7 @@ doInstall(){
 
   if [[ "${phpV}" != '0' && "${LiteSpeedV}" != '0' ]]; then
     if [ "${dbV}" = "1" ]; then
-      echo 'Install AMySQL'
+      showNotice 'Install AMySQL'
       cd /var/www/vhosts/localhost/html/
       wget http://amh.sh/file/AMS/amysql-1.6.zip
       unzip -q amysql-1.6.zip
@@ -527,13 +517,13 @@ doInstall(){
       mv amysql-1.6 AMysql
       sed -i "s/phpMyAdmin/AMysql/g" /var/www/vhosts/localhost/html/index.html
     elif [ "${dbV}" = "2" ]; then
-      echo 'Install Adminer'
+      showNotice 'Install Adminer'
       cp -a /tmp/LLStack-${envType}/DB/Adminer /var/www/vhosts/localhost/html/
       sed -i "s/phpMyAdmin/Adminer/g" /var/www/vhosts/localhost/html/index.html
     elif [ "${dbV}" = "3" ]; then
       ## PHP 5.4 仅 PMA 4.0 LTS 支持
       if [[ "${phpV}" = "1" || "${phpV}" = "2" ]]; then
-        echo 'Install phpMyAdmin 4.9'
+        showNotice 'Install phpMyAdmin 4.9'
         cd /var/www/vhosts/localhost/html/
         wget ${phpMyAdminURL}/phpMyAdmin/4.9.7/phpMyAdmin-4.9.7-all-languages.tar.gz
         tar xzf phpMyAdmin-4.9.7-all-languages.tar.gz
@@ -549,7 +539,7 @@ doInstall(){
       #  mv phpMyAdmin-4.8.5-all-languages phpMyAdmin
       ## PHP 7.1+ 支持 4.8，5.0+
       else
-        echo 'Install phpMyAdmin 5.1'
+        showNotice 'Install phpMyAdmin 5.1'
         cd /var/www/vhosts/localhost/html/
         wget ${phpMyAdminURL}/phpMyAdmin/5.1.0/phpMyAdmin-5.1.0-all-languages.tar.gz
         tar xzf phpMyAdmin-5.1.0-all-languages.tar.gz
@@ -560,7 +550,7 @@ doInstall(){
   fi
 
   if [ "${dbV}" = "3" ]; then
-  echo 'Setup phpMyAdmin'
+  showNotice 'Setup phpMyAdmin'
   mkdir -p /var/www/vhosts/localhost/html/phpMyAdmin/tmp/
   chmod 0777 /var/www/vhosts/localhost/html/phpMyAdmin/tmp/
   cp /var/www/vhosts/localhost/html/phpMyAdmin/libraries/config.default.php /var/www/vhosts/localhost/html/phpMyAdmin/config.inc.php
@@ -572,7 +562,7 @@ doInstall(){
   
   showNotice "Start service"
 
-  echo 'Start FirewallD'
+  showNotice 'Start FirewallD'
   systemctl enable firewalld.service
   systemctl restart firewalld.service
 
@@ -585,24 +575,24 @@ doInstall(){
     #if [[ "${mysqlV}" = '1' || "${mysqlV}" = '2' ]]; then
     #  service mysql start
     #else
-    echo 'Start DB'
+    showNotice 'Start DB'
     systemctl enable ${installDB}.service
     systemctl start ${installDB}.service
     #fi
-    echo 'Setting DB Root Password'
+    showNotice 'Setting DB Root Password'
     mysqladmin -u root password "${mysqlPWD}"
     mysqladmin -u root -p"${mysqlPWD}" -h "localhost" password "${mysqlPWD}"
     mysql -u root -p"${mysqlPWD}" -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');DELETE FROM mysql.user WHERE User='';DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';FLUSH PRIVILEGES;"
     if [ "${mysqlV}" = "6" ]; then
     mysql -u root -p"${mysqlPWD}" -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY \"${mysqlPWD}\";FLUSH PRIVILEGES;"
     fi
-    echo 'Add DB Root Password to initialPWD'
+    showNotice 'Add DB Root Password to initialPWD'
     echo "${mysqlPWD}" > /var/www/vhosts/initialPWD.txt
     rm -rf /var/lib/mysql/test
   fi
 
 #  if [ "${LiteSpeedV}" != '0' ]; then
-#    echo 'Setting OLS Admin Password'
+#    showNotice 'Setting OLS Admin Password'
 #    LSPASSRAND=`head -c 100 /dev/urandom | tr -dc a-z0-9A-Z |head -c 16`
 #    if [ -e /usr/local/lsws/admin/fcgi-bin/admin_php ]; then \
 #        ENCRYPT_PASS=`/usr/local/lsws/admin/fcgi-bin/admin_php -q /usr/local/lsws/admin/misc/htpasswd.php $LSPASSRAND`
@@ -683,7 +673,7 @@ preInstall(){
   echo '1) Install'
   echo '2) Upgrade packages'
   echo '3) Exit'
-  read -p 'Select an option [1-3]: ' -r -e operation
+  read -p 'Select an option [1-3]: ' -r -e -i 1 operation
   case ${operation} in
     1)
       clear
@@ -749,6 +739,12 @@ clear
             ;;
         -[cC] | -China | --CN) shift
             freeV="${1}"
+            ;;    
+        -[kK] | -Key | --KEY) shift
+            acV="${1}"
+            ;;    
+        -[nN] | -Number | --NUM) shift
+            acnoV="${1}"
             ;;    
     esac
     shift
